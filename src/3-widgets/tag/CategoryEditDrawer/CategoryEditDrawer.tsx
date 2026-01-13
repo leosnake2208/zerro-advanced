@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback, useEffect } from 'react'
+import React, { FC, useState, useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Box,
@@ -41,18 +41,24 @@ import tagIcons from '6-shared/tagIcons.json'
 // Helper to convert between TFxCode and TInstrumentId
 const useInstrumentIdByCode = () => {
   const instruments = instrumentModel.useInstrumentsByCode()
-  return (code: TFxCode | null): TInstrumentId | undefined => {
-    if (!code) return undefined
-    return instruments[code]?.id
-  }
+  return useCallback(
+    (code: TFxCode | null): TInstrumentId | undefined => {
+      if (!code) return undefined
+      return instruments[code]?.id
+    },
+    [instruments]
+  )
 }
 
 const useFxCodeById = () => {
   const instCodeMap = useAppSelector(instrumentModel.getInstCodeMap)
-  return (id: TInstrumentId | undefined): TFxCode | null => {
-    if (id === undefined) return null
-    return instCodeMap[id] || null
-  }
+  return useCallback(
+    (id: TInstrumentId | undefined): TFxCode | null => {
+      if (id === undefined) return null
+      return instCodeMap[id] || null
+    },
+    [instCodeMap]
+  )
 }
 
 // Simple currency select component
@@ -128,6 +134,13 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
   const getInstrumentId = useInstrumentIdByCode()
   const getFxCode = useFxCodeById()
 
+  // Compute saved currency once from tagMeta (stable reference for useEffect)
+  const savedCurrency = useMemo(
+    () => getFxCode(tagMeta.currency),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tagMeta.currency]
+  )
+
   // Check if tag has children
   const hasChildren = tag
     ? Object.values(tags).some(t => t.parent === tagId)
@@ -151,7 +164,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
   const [comment, setComment] = useState('')
   const [currency, setCurrency] = useState<TFxCode | null>(null)
 
-  // Reset form when tag changes
+  // Reset form when tag changes (use tagId instead of tag object to avoid infinite loop)
   useEffect(() => {
     if (tag) {
       setTitle(tag.title)
@@ -163,7 +176,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       setBudgetIncome(tag.budgetIncome)
       setBudgetOutcome(tag.budgetOutcome)
       setComment(tagMeta.comment || '')
-      setCurrency(getFxCode(tagMeta.currency))
+      setCurrency(savedCurrency)
       setIsEditing(false)
     } else {
       // New category defaults
@@ -179,11 +192,11 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       setCurrency(null)
       setIsEditing(true)
     }
-  }, [tag, tagMeta, open, getFxCode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagId, open])
 
   const hasChanges = useCallback(() => {
     if (!tag) return title.trim().length > 0
-    const savedCurrency = getFxCode(tagMeta.currency)
     return (
       title !== tag.title ||
       icon !== tag.icon ||
@@ -208,8 +221,8 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
     comment,
     currency,
     tag,
-    tagMeta,
-    getFxCode,
+    tagMeta.comment,
+    savedCurrency,
   ])
 
   const handleSave = () => {
@@ -217,7 +230,6 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
 
     // Convert currency code to instrument ID for saving
     const currencyInstrumentId = getInstrumentId(currency)
-    const savedCurrency = getFxCode(tagMeta.currency)
 
     if (tag) {
       // Update existing tag
@@ -302,7 +314,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
         setBudgetIncome(tag.budgetIncome)
         setBudgetOutcome(tag.budgetOutcome)
         setComment(tagMeta.comment || '')
-        setCurrency(getFxCode(tagMeta.currency))
+        setCurrency(savedCurrency)
       }
       setIsEditing(false)
     }

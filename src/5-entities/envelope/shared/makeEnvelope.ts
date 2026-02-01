@@ -150,7 +150,8 @@ const funcs: TFuncs = {
       meta?.group || (el.merchantId ? defaultMerchantGroup : defaultPayeeGroup),
   },
   visibility: {
-    tag: (el, fx, meta) => getVisibility(meta?.visibility, el.showOutcome),
+    tag: (el, fx, meta) =>
+      getVisibility(meta?.visibility, el.showOutcome, el.showIncome),
     account: (el, fx, meta) => getVisibility(meta?.visibility),
     debtor: (el, fx, meta) => getVisibility(meta?.visibility),
   },
@@ -277,9 +278,11 @@ function makeEnvelopeFromDebtor(
 
 function getVisibility(
   isVisible: envelopeVisibility | undefined,
-  tagShowOutcome?: boolean
+  tagShowOutcome?: boolean,
+  tagShowIncome?: boolean
 ): envelopeVisibility {
   if (isVisible) return isVisible
-  else if (tagShowOutcome) return envelopeVisibility.visible
+  // Show if either income or outcome is enabled
+  else if (tagShowOutcome || tagShowIncome) return envelopeVisibility.visible
   else return envelopeVisibility.auto
 }

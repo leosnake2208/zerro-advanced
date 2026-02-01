@@ -78,3 +78,23 @@ export const getKeepingEnvelopes: TSelector<TEnvelopeId[]> = createSelector(
   envelopes => keys(envelopes).filter(id => envelopes[id].keepIncome),
   { memoizeOptions: { resultEqualityCheck: shallowEqual } }
 )
+
+/** List of income envelopes (categoryType === 'income') */
+export const getIncomeEnvelopes: TSelector<TEnvelope[]> = createSelector(
+  [getEnvelopes],
+  envelopes =>
+    Object.values(envelopes).filter(env => env.categoryType === 'income')
+)
+
+/** List of expense envelopes (categoryType === 'expense') */
+export const getExpenseEnvelopes: TSelector<TEnvelope[]> = createSelector(
+  [getEnvelopes],
+  envelopes =>
+    Object.values(envelopes).filter(env => env.categoryType === 'expense')
+)
+
+/** Set of income envelope IDs for fast lookup */
+export const getIncomeEnvelopeIds: TSelector<Set<TEnvelopeId>> = createSelector(
+  [getIncomeEnvelopes],
+  envelopes => new Set(envelopes.map(e => e.id))
+)

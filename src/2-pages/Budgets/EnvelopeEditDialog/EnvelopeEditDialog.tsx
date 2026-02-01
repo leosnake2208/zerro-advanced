@@ -12,9 +12,13 @@ import {
   DialogTitle,
   FormControlLabel,
   FormGroup,
+  FormLabel,
   InputAdornment,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material'
 import { ColorPicker, useColorPicker } from '6-shared/ui/ColorPickerPopover'
 import { useAppDispatch } from 'store'
@@ -23,6 +27,7 @@ import {
   envelopeVisibility,
   EnvType,
   TEnvelope,
+  TCategoryType,
 } from '5-entities/envelope'
 // import { TagSelect } from '@components/TagSelect'
 import { CurrencyCodeSelect } from './CurrencyCodeSelect'
@@ -69,6 +74,7 @@ export const EnvelopeEditDialog: FC = () => {
       group: envelope?.group || '',
       comment: envelope?.comment || '',
       currency: envelope?.currency || defaultCurrency,
+      categoryType: envelope?.categoryType || 'expense',
     },
     validate: values => {
       if (!values.originalName.trim()) {
@@ -167,6 +173,31 @@ export const EnvelopeEditDialog: FC = () => {
             value={values.visibility}
             onChange={handleChange}
           />
+          <FormGroup>
+            <FormLabel component="legend" sx={{ mb: 1 }}>
+              {t('categoryTypeLabel')}
+            </FormLabel>
+            <RadioGroup
+              name="categoryType"
+              value={values.categoryType}
+              onChange={handleChange}
+              row
+            >
+              <FormControlLabel
+                value="expense"
+                control={<Radio />}
+                label={t('categoryType.expense')}
+              />
+              <FormControlLabel
+                value="income"
+                control={<Radio />}
+                label={t('categoryType.income')}
+              />
+            </RadioGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              {t('categoryTypeHint')}
+            </Typography>
+          </FormGroup>
           <FormGroup>
             {/* <FormControlLabel
               name="showIncome"

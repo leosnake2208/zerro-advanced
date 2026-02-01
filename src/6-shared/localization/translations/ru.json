@@ -116,6 +116,12 @@
       "hidden": "Всегда скрывать"
     },
     "keepIncomeLabel": "Класть доходы в категорию",
+    "categoryTypeLabel": "Тип категории",
+    "categoryType": {
+      "income": "Доходная",
+      "expense": "Расходная"
+    },
+    "categoryTypeHint": "Доходные категории увеличивают доступные средства",
     "btnSave": "Сохранить категорию",
     "btnCreate": "Создать категорию",
     "btnCancel": "Отменить",
@@ -262,6 +268,9 @@
     "envelopeCurrencyTooltip": "Бюджет этой категории задаётся в {{currency}}. Он автоматически будет пересчитываться по текущему курсу.",
     "goal": "Цель",
     "addGoal": "Добавить цель",
+    "incomeSection": "Доходы",
+    "expenseSection": "Расходы",
+    "totalBalance": "Баланс",
     "activityStats": {
       "incomes": "Доходы",
       "outcomes": "Расходы",
@@ -772,6 +781,9 @@
     "fieldShowOutcome": "Показывать для расходов",
     "fieldBudgetIncome": "Учитывать в бюджете доходов",
     "fieldBudgetOutcome": "Учитывать в бюджете расходов",
+    "fieldCategoryType": "Тип категории",
+    "fieldCategoryTypeIncome": "Доходная",
+    "fieldCategoryTypeExpense": "Расходная",
     "fieldComment": "Комментарий",
     "fieldCurrency": "Валюта по умолчанию",
 

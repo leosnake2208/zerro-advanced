@@ -120,6 +120,12 @@ export const en: typeof ru = {
       hidden: 'Always hide',
     },
     keepIncomeLabel: 'Put income into this category',
+    categoryTypeLabel: 'Category type',
+    categoryType: {
+      income: 'Income',
+      expense: 'Expense',
+    },
+    categoryTypeHint: 'Income categories increase available funds',
     btnSave: 'Save category',
     btnCreate: 'Create category',
     btnCancel: 'Cancel',
@@ -278,6 +284,9 @@ export const en: typeof ru = {
       'The budget of this category is set in {{currency}}. It will be automatically recalculated at the current exchange rate.',
     addGoal: 'Add goal',
     goal: 'Goal',
+    incomeSection: 'Income',
+    expenseSection: 'Expenses',
+    totalBalance: 'Balance',
     activityStats: {
       incomes: 'Incomes',
       outcomes: 'Expenses',
@@ -800,6 +809,9 @@ export const en: typeof ru = {
     fieldShowOutcome: 'Show for expenses',
     fieldBudgetIncome: 'Include in income budget',
     fieldBudgetOutcome: 'Include in expense budget',
+    fieldCategoryType: 'Category type',
+    fieldCategoryTypeIncome: 'Income',
+    fieldCategoryTypeExpense: 'Expense',
     fieldComment: 'Comment',
     fieldCurrency: 'Default currency',
 

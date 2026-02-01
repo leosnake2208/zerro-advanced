@@ -7,6 +7,7 @@ import { addFxAmount, subFxAmount } from '6-shared/helpers/money'
 import { withPerf } from '6-shared/helpers/performance'
 
 import { fxRateModel, TFxConverter } from '5-entities/currency/fxRate'
+import { envelopeModel, TEnvelopeId } from '5-entities/envelope'
 import { getCurrentFunds } from './1 - currentFunds'
 import { getMonthList } from './1 - monthList'
 import { getActivity, TActivityNode } from './2 - activity'
@@ -34,6 +35,11 @@ export type TMonthTotals = {
   toBeBudgeted: TFxAmount
   toBeBudgetedState: TToBeBudgetedState
   overspend: TFxAmount
+
+  // Income/Expense category totals
+  incomeActivity: TFxAmount // Activity for income categories (positive = earned)
+  expenseActivity: TFxAmount // Activity for expense categories (negative = spent)
+  balance: TFxAmount // incomeActivity + expenseActivity (income - expenses)
 }
 
 export const getMonthTotals: TSelector<ByMonth<TMonthTotals>> = createSelector(
@@ -43,6 +49,7 @@ export const getMonthTotals: TSelector<ByMonth<TMonthTotals>> = createSelector(
     getActivity,
     getEnvMetrics,
     fxRateModel.converter,
+    envelopeModel.getIncomeEnvelopeIds,
   ],
   withPerf('🖤 getMonthTotals', calcMonthTotals)
 )
@@ -52,7 +59,8 @@ function calcMonthTotals(
   currentFunds: TFxAmount,
   activity: ByMonth<TActivityNode>,
   envMetrics: ByMonth<ById<TEnvMetrics>>,
-  convertFx: TFxConverter
+  convertFx: TFxConverter,
+  incomeEnvelopeIds: Set<TEnvelopeId>
 ) {
   const result: ByMonth<TMonthTotals> = {}
 
@@ -90,9 +98,12 @@ function calcMonthTotals(
     let budgeted = {}
     let available = {}
     let overspend = {}
+    let incomeActivity = {} as TFxAmount
+    let expenseActivity = {} as TFxAmount
     Object.values(envMetrics[month]).forEach(metrics => {
       if (metrics.parent) return // Skip children
-      const { totalBudgeted, totalAvailable, selfAvailable } = metrics
+      const { totalBudgeted, totalAvailable, selfAvailable, id, totalActivity } =
+        metrics
       budgeted = addFxAmount(budgeted, totalBudgeted)
       available = addFxAmount(available, totalAvailable)
 
@@ -105,7 +116,17 @@ function calcMonthTotals(
       if (hasOverspend) {
         overspend = addFxAmount(overspend, selfAvailable)
       }
+
+      // Calculate income/expense activity totals
+      if (incomeEnvelopeIds.has(id)) {
+        incomeActivity = addFxAmount(incomeActivity, totalActivity)
+      } else {
+        expenseActivity = addFxAmount(expenseActivity, totalActivity)
+      }
     })
+
+    // Balance = income + expenses (expenses are negative, so this is income - |expenses|)
+    const balance = addFxAmount(incomeActivity, expenseActivity)
 
     let budgetedInFuture = addFxAmount(
       prevMonth.positiveBudgeted || {},
@@ -135,6 +156,9 @@ function calcMonthTotals(
       toBeBudgeted: toBeBudgetedInfo.value,
       toBeBudgetedState: toBeBudgetedInfo.state,
       overspend,
+      incomeActivity,
+      expenseActivity,
+      balance,
     }
     prev = month
   })

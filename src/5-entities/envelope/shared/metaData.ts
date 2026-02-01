@@ -12,6 +12,8 @@ export enum envelopeVisibility {
   auto = 'auto',
 }
 
+export type TCategoryType = 'income' | 'expense'
+
 export type TEnvelopeMeta = {
   id: TEnvelopeId
   group?: string
@@ -22,6 +24,7 @@ export type TEnvelopeMeta = {
   currency?: TFxCode
   keepIncome?: boolean
   carryNegatives?: boolean
+  categoryType?: TCategoryType
 }
 
 const envelopeMetaStore = makeSimpleHiddenStore<ById<TEnvelopeMeta>>(

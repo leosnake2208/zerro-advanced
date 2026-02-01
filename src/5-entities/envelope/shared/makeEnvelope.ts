@@ -5,7 +5,7 @@ import { getColorForString } from '6-shared/helpers/color'
 import type { TTagPopulated } from '5-entities/tag'
 import type { TDebtor } from '5-entities/debtors'
 import { envId, TEnvelopeId, EnvType } from './envelopeId'
-import { TEnvelopeMeta, envelopeVisibility } from './metaData'
+import { TEnvelopeMeta, envelopeVisibility, TCategoryType } from './metaData'
 
 const defaultTagGroup = t('defaultTagGroup', { ns: 'common' })
 const defaultAccountGroup = t('defaultAccountGroup', { ns: 'common' })
@@ -36,6 +36,7 @@ export type TEnvelope = {
   currency: TFxCode
   keepIncome: boolean
   carryNegatives: boolean
+  categoryType: TCategoryType
 }
 
 export const makeEnvelope = {
@@ -70,6 +71,7 @@ type TFuncs = {
   currency: TMaker<TEnvelope['currency']>
   keepIncome: TMaker<TEnvelope['keepIncome']>
   carryNegatives: TMaker<TEnvelope['carryNegatives']>
+  categoryType: TMaker<TEnvelope['categoryType']>
 }
 
 const funcs: TFuncs = {
@@ -172,6 +174,14 @@ const funcs: TFuncs = {
     account: (el, fx, meta) => meta?.carryNegatives || false,
     debtor: (el, fx, meta) => meta?.carryNegatives || false,
   },
+  categoryType: {
+    // Auto-detect: if tag is income-only (budgetIncome && !budgetOutcome), default to 'income'
+    tag: (el, fx, meta) =>
+      meta?.categoryType ||
+      (el.budgetIncome && !el.budgetOutcome ? 'income' : 'expense'),
+    account: (el, fx, meta) => meta?.categoryType || 'expense',
+    debtor: (el, fx, meta) => meta?.categoryType || 'expense',
+  },
 }
 
 function makeEnvelopeFromTag(
@@ -201,6 +211,7 @@ function makeEnvelopeFromTag(
     currency: funcs.currency.tag(el, userCurrency, meta),
     keepIncome: funcs.keepIncome.tag(el, userCurrency, meta),
     carryNegatives: funcs.carryNegatives.tag(el, userCurrency, meta),
+    categoryType: funcs.categoryType.tag(el, userCurrency, meta),
   }
 }
 function makeEnvelopeFromAccount(
@@ -230,6 +241,7 @@ function makeEnvelopeFromAccount(
     currency: funcs.currency.account(el, userCurrency, meta),
     keepIncome: funcs.keepIncome.account(el, userCurrency, meta),
     carryNegatives: funcs.carryNegatives.account(el, userCurrency, meta),
+    categoryType: funcs.categoryType.account(el, userCurrency, meta),
   }
 }
 function makeEnvelopeFromDebtor(
@@ -259,6 +271,7 @@ function makeEnvelopeFromDebtor(
     currency: funcs.currency.debtor(el, userCurrency, meta),
     keepIncome: funcs.keepIncome.debtor(el, userCurrency, meta),
     carryNegatives: funcs.carryNegatives.debtor(el, userCurrency, meta),
+    categoryType: funcs.categoryType.debtor(el, userCurrency, meta),
   }
 }
 

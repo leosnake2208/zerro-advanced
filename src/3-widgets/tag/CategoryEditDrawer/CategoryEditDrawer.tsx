@@ -15,11 +15,19 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Radio,
+  RadioGroup,
+  FormLabel,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { useAppDispatch } from 'store'
 import { TTagId, TFxCode, TInstrumentId, TTag } from '6-shared/types'
 import { tagModel, TTagPopulated } from '5-entities/tag'
+import {
+  envelopeModel,
+  EnvType,
+  TCategoryType,
+} from '5-entities/envelope'
 
 // Use TTag's icon type for proper type checking
 type TIconName = TTag['icon']
@@ -130,6 +138,11 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
     tagId ? getMetaForTag(tagId)(state) : {}
   )
 
+  // Get envelope data for categoryType
+  const envelopes = envelopeModel.useEnvelopes()
+  const envelopeId = tagId ? envelopeModel.makeId(EnvType.Tag, tagId) : null
+  const envelope = envelopeId ? envelopes[envelopeId] : null
+
   // Currency converters
   const getInstrumentId = useInstrumentIdByCode()
   const getFxCode = useFxCodeById()
@@ -163,6 +176,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
   const [budgetOutcome, setBudgetOutcome] = useState(true)
   const [comment, setComment] = useState('')
   const [currency, setCurrency] = useState<TFxCode | null>(null)
+  const [categoryType, setCategoryType] = useState<TCategoryType>('expense')
 
   // Reset form when tag changes (use tagId instead of tag object to avoid infinite loop)
   useEffect(() => {
@@ -177,6 +191,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       setBudgetOutcome(tag.budgetOutcome)
       setComment(tagMeta.comment || '')
       setCurrency(savedCurrency)
+      setCategoryType(envelope?.categoryType || 'expense')
       setIsEditing(false)
     } else {
       // New category defaults
@@ -190,6 +205,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       setBudgetOutcome(true)
       setComment('')
       setCurrency(null)
+      setCategoryType('expense')
       setIsEditing(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,7 +223,8 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       budgetIncome !== tag.budgetIncome ||
       budgetOutcome !== tag.budgetOutcome ||
       comment !== (tagMeta.comment || '') ||
-      currency !== savedCurrency
+      currency !== savedCurrency ||
+      categoryType !== (envelope?.categoryType || 'expense')
     )
   }, [
     title,
@@ -223,6 +240,8 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
     tag,
     tagMeta.comment,
     savedCurrency,
+    categoryType,
+    envelope?.categoryType,
   ])
 
   const handleSave = () => {
@@ -254,6 +273,10 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       if (currency !== savedCurrency) {
         dispatch(setTagCurrency(tag.id, currencyInstrumentId))
       }
+      // Update envelope categoryType
+      if (envelopeId && categoryType !== (envelope?.categoryType || 'expense')) {
+        dispatch(envelopeModel.patchEnvelope({ id: envelopeId, categoryType }))
+      }
     } else {
       // Create new tag
       const newTags = dispatch(
@@ -270,12 +293,19 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
       )
 
       // Set meta for new tag
-      if (newTags[0] && (comment || currency)) {
+      if (newTags[0]) {
         if (comment) {
           dispatch(setTagComment(newTags[0].id, comment))
         }
         if (currency) {
           dispatch(setTagCurrency(newTags[0].id, currencyInstrumentId))
+        }
+        // Set categoryType for new envelope
+        if (categoryType !== 'expense') {
+          const newEnvelopeId = envelopeModel.makeId(EnvType.Tag, newTags[0].id)
+          dispatch(
+            envelopeModel.patchEnvelope({ id: newEnvelopeId, categoryType })
+          )
         }
       }
     }
@@ -315,6 +345,7 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
         setBudgetOutcome(tag.budgetOutcome)
         setComment(tagMeta.comment || '')
         setCurrency(savedCurrency)
+        setCategoryType(envelope?.categoryType || 'expense')
       }
       setIsEditing(false)
     }
@@ -517,6 +548,29 @@ export const CategoryEditDrawer: FC<CategoryEditDrawerProps> = ({
             label={t('fieldBudgetOutcome')}
           />
         </Stack>
+
+        {/* Category Type */}
+        <Box sx={{ mb: 2 }}>
+          <FormLabel component="legend" sx={{ mb: 1 }}>
+            {t('fieldCategoryType')}
+          </FormLabel>
+          <RadioGroup
+            value={categoryType}
+            onChange={e => setCategoryType(e.target.value as TCategoryType)}
+            row
+          >
+            <FormControlLabel
+              value="expense"
+              control={<Radio disabled={!isEditing} />}
+              label={t('fieldCategoryTypeExpense')}
+            />
+            <FormControlLabel
+              value="income"
+              control={<Radio disabled={!isEditing} />}
+              label={t('fieldCategoryTypeIncome')}
+            />
+          </RadioGroup>
+        </Box>
 
         <Divider sx={{ my: 2 }} />
 

@@ -22,6 +22,8 @@ export type TRenderInfo = {
   hasChildren: boolean
 }
 
+export type TEnvRenderInfo = ById<TRenderInfo>
+
 export const getEnvRenderInfo: TSelector<ByMonth<ById<TRenderInfo>>> =
   createSelector(
     [

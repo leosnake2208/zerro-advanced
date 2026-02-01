@@ -125,8 +125,8 @@ function calcMonthTotals(
       }
     })
 
-    // Balance = income + expenses (expenses are negative, so this is income - |expenses|)
-    const balance = addFxAmount(incomeActivity, expenseActivity)
+    // Balance = income - expenses
+    const balance = subFxAmount(incomeActivity, expenseActivity)
 
     let budgetedInFuture = addFxAmount(
       prevMonth.positiveBudgeted || {},

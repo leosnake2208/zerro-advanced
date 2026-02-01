@@ -166,9 +166,15 @@ const funcs: TFuncs = {
     debtor: (el, fx, meta) => meta?.currency || fx,
   },
   keepIncome: {
-    tag: (el, fx, meta) => meta?.keepIncome || false,
-    account: (el, fx, meta) => meta?.keepIncome || false,
-    debtor: (el, fx, meta) => meta?.keepIncome || false,
+    // Auto-enable keepIncome for income categories
+    tag: (el, fx, meta) =>
+      meta?.keepIncome ??
+      (meta?.categoryType === 'income' ||
+        (el.budgetIncome && !el.budgetOutcome)),
+    account: (el, fx, meta) =>
+      meta?.keepIncome ?? meta?.categoryType === 'income',
+    debtor: (el, fx, meta) =>
+      meta?.keepIncome ?? meta?.categoryType === 'income',
   },
   carryNegatives: {
     tag: (el, fx, meta) => meta?.carryNegatives || false,

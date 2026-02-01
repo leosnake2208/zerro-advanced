@@ -37,9 +37,16 @@ export type TMonthTotals = {
   overspend: TFxAmount
 
   // Income/Expense category totals
-  incomeActivity: TFxAmount // Activity for income categories (positive = earned)
-  expenseActivity: TFxAmount // Activity for expense categories (negative = spent)
-  balance: TFxAmount // incomeActivity + expenseActivity (income - expenses)
+  incomeBudgeted: TFxAmount
+  incomeActivity: TFxAmount
+  incomeAvailable: TFxAmount
+  expenseBudgeted: TFxAmount
+  expenseActivity: TFxAmount
+  expenseAvailable: TFxAmount
+  // Balance = income - expense for each column
+  balanceBudgeted: TFxAmount
+  balanceActivity: TFxAmount
+  balanceAvailable: TFxAmount
 }
 
 export const getMonthTotals: TSelector<ByMonth<TMonthTotals>> = createSelector(
@@ -98,8 +105,14 @@ function calcMonthTotals(
     let budgeted = {}
     let available = {}
     let overspend = {}
+    // Income/Expense totals for all three columns
+    let incomeBudgeted = {} as TFxAmount
     let incomeActivity = {} as TFxAmount
+    let incomeAvailable = {} as TFxAmount
+    let expenseBudgeted = {} as TFxAmount
     let expenseActivity = {} as TFxAmount
+    let expenseAvailable = {} as TFxAmount
+
     Object.values(envMetrics[month]).forEach(metrics => {
       if (metrics.parent) return // Skip children
       const { totalBudgeted, totalAvailable, selfAvailable, id, totalActivity } =
@@ -117,16 +130,22 @@ function calcMonthTotals(
         overspend = addFxAmount(overspend, selfAvailable)
       }
 
-      // Calculate income/expense activity totals
+      // Calculate income/expense totals for all three columns
       if (incomeEnvelopeIds.has(id)) {
+        incomeBudgeted = addFxAmount(incomeBudgeted, totalBudgeted)
         incomeActivity = addFxAmount(incomeActivity, totalActivity)
+        incomeAvailable = addFxAmount(incomeAvailable, totalAvailable)
       } else {
+        expenseBudgeted = addFxAmount(expenseBudgeted, totalBudgeted)
         expenseActivity = addFxAmount(expenseActivity, totalActivity)
+        expenseAvailable = addFxAmount(expenseAvailable, totalAvailable)
       }
     })
 
-    // Balance = income - expenses
-    const balance = subFxAmount(incomeActivity, expenseActivity)
+    // Balance = income - expenses for each column
+    const balanceBudgeted = subFxAmount(incomeBudgeted, expenseBudgeted)
+    const balanceActivity = subFxAmount(incomeActivity, expenseActivity)
+    const balanceAvailable = subFxAmount(incomeAvailable, expenseAvailable)
 
     let budgetedInFuture = addFxAmount(
       prevMonth.positiveBudgeted || {},
@@ -156,9 +175,17 @@ function calcMonthTotals(
       toBeBudgeted: toBeBudgetedInfo.value,
       toBeBudgetedState: toBeBudgetedInfo.state,
       overspend,
+      // Income/Expense category totals
+      incomeBudgeted,
       incomeActivity,
+      incomeAvailable,
+      expenseBudgeted,
       expenseActivity,
-      balance,
+      expenseAvailable,
+      // Balance = income - expense for each column
+      balanceBudgeted,
+      balanceActivity,
+      balanceAvailable,
     }
     prev = month
   })

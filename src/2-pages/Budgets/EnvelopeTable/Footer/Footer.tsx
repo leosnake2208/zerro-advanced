@@ -32,10 +32,13 @@ export const Footer: FC<FooterProps> = props => {
     </Typography>
   )
 
-  // Calculate balance value for color
-  const balanceValue = toDisplay(totals.balance)
-  const balanceColor =
-    balanceValue > 0 ? 'success.main' : balanceValue < 0 ? 'error.main' : 'text.secondary'
+  // Calculate balance values for colors
+  const balanceBudgetedValue = toDisplay(totals.balanceBudgeted)
+  const balanceActivityValue = toDisplay(totals.balanceActivity)
+  const balanceAvailableValue = toDisplay(totals.balanceAvailable)
+
+  const getBalanceColor = (value: number) =>
+    value > 0 ? 'success.main' : value < 0 ? 'error.main' : 'text.secondary'
 
   return (
     <Box>
@@ -60,7 +63,7 @@ export const Footer: FC<FooterProps> = props => {
         goal={null}
       />
 
-      {/* Balance row - income minus expenses */}
+      {/* Balance row - income minus expenses for all columns */}
       <TableRow
         sx={{
           pt: 1,
@@ -74,14 +77,31 @@ export const Footer: FC<FooterProps> = props => {
               noWrap
               sx={{
                 fontWeight: 700,
-                color: balanceColor,
+                color: getBalanceColor(balanceActivityValue),
               }}
             >
               {t('budgets:totalBalance')}
             </Typography>
           </div>
         }
-        budgeted={null}
+        budgeted={
+          <Typography
+            variant="subtitle2"
+            align="right"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              color: getBalanceColor(balanceBudgetedValue),
+            }}
+          >
+            <DisplayAmount
+              value={totals.balanceBudgeted}
+              decMode="ifOnly"
+              month={month}
+              noCurrency
+            />
+          </Typography>
+        }
         outcome={
           <Typography
             variant="subtitle2"
@@ -89,18 +109,35 @@ export const Footer: FC<FooterProps> = props => {
             noWrap
             sx={{
               fontWeight: 700,
-              color: balanceColor,
+              color: getBalanceColor(balanceActivityValue),
             }}
           >
             <DisplayAmount
-              value={totals.balance}
+              value={totals.balanceActivity}
               decMode="ifOnly"
               month={month}
               noCurrency
             />
           </Typography>
         }
-        available={null}
+        available={
+          <Typography
+            variant="subtitle2"
+            align="right"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              color: getBalanceColor(balanceAvailableValue),
+            }}
+          >
+            <DisplayAmount
+              value={totals.balanceAvailable}
+              decMode="ifOnly"
+              month={month}
+              noCurrency
+            />
+          </Typography>
+        }
         goal={null}
       />
     </Box>
